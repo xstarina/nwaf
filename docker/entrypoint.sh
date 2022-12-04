@@ -5,6 +5,8 @@ set -e
 NWAF_VER=$(dpkg -l | grep nwaf-dyn | awk '{print$3}')
 NWAF_VER_FILE=/etc/nginx/nwaf-dyn-version
 
+UI_DIR=/etc/nginx-ui
+
 create_configs() {
   local NGINX_CONF
   NGINX_CONF=/etc/nginx/nginx.conf
@@ -18,7 +20,7 @@ create_configs() {
 }
 
 mkdir -p /etc/nginx
-if [ "$(ls -A /etc/nginx)" = "" ]; then
+if [[ "$(ls -A /etc/nginx)" = "" ]]; then
   echo "Initialing Nginx config dir..."
 
   cp -rp /etc/nginx-orig/* /etc/nginx/
@@ -28,12 +30,26 @@ if [ "$(ls -A /etc/nginx)" = "" ]; then
   echo "Nginx config dir is done"
 fi
 
+mkdir -p $UI_DIR
+if [[ ! -f "${UI_DIR}/app.ini" ]]; then
+  echo "Initialing Nginx UI config file..."
+
+  cat > "${UI_DIR}/app.ini" << EOF
+[server]
+RunMode = release
+HttpPort = 9000
+HTTPChallengePort = 9180
+EOF
+
+  echo "Nginx UI config file is done"
+fi
+
 [[ -f /etc/machine-id ]] || /usr/bin/dbus-uuidgen > /etc/machine-id
 [[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]] && echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
 
 epmd -daemon
 service rabbitmq-server start
 service nwaf_update start
-nginx-ui -config /usr/local/etc/nginx-ui/app.ini &
+nginx-ui -config "${UI_DIR}/app.ini" &
 
 exec "$@"

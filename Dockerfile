@@ -18,10 +18,11 @@ RUN set -x \
 RUN set -x && apt-get install $NWAF_PKG -y
 RUN set -x && mv /etc/nginx /etc/nginx-orig
 
+COPY docker/nginx-ui/get-latest.sh /nginx-ui/
+RUN set -x && bash /nginx-ui/get-latest.sh
+
 COPY docker /
-RUN set -x \
-  && bash /nginx-ui/get-latest.sh \
-  && chmod +x /etc/init.d/*
+RUN set -x && chmod +x /etc/init.d/*
 
 EXPOSE 80 443 9000
 

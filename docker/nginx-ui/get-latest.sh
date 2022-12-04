@@ -4,7 +4,7 @@ set -e
 
 # You can set this variable whatever you want in shell session right before running this script by issuing:
 # export DATA_PATH='/usr/local/etc/nginx-ui'
-DataPath=${DATA_PATH:-/usr/local/etc/nginx-ui}
+DataPath=${DATA_PATH:-/etc/nginx-ui}
 
 # Font color
 FontBlack="\033[30m";
