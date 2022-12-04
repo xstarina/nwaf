@@ -1,16 +1,29 @@
-FROM nginx:latest
+FROM nginx:1.22.1
 
-RUN set -x && export DEBIAN_FRONTEND=noninteractive \
-  && apt-get update && apt-get install apt-utils && apt-get upgrade -y \
-  && apt-get install apt-transport-https gnupg2 curl procps python3 python3-venv python3-pip python3-dev python3-setuptools librabbitmq4 libcurl3-gnutls libcurl4-openssl-dev libc6-dev gcc rabbitmq-server libmaxminddb0 g++ memcached jq dbus -y \
-  && /bin/sh -c python3 -m pip install --upgrade pip
+ENV NWAF_PKG=nwaf-dyn-1.22
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN set -x && export DEBIAN_FRONTEND=noninteractive \
+RUN set -x \
+  && apt-get update && apt-get upgrade -y \
+  && apt-get install apt-utils apt-transport-https gnupg2 curl procps dbus -y
+
+RUN set -x \
   && echo "deb https://nemesida-security.com/repo/nw/debian bullseye non-free" > /etc/apt/sources.list.d/NemesidaWAF.list \
   && curl -s https://nemesida-security.com/repo/nw/gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/trusted.gpg --import \
   && chmod 644 /etc/apt/trusted.gpg.d/trusted.gpg \
-  && apt-get update && apt-get install nwaf-dyn-1.22 -y
+  && apt-get update \
+  && apt-get install $(apt-cache depends $NWAF_PKG | awk '/Depends:/{print$2}') -y \
+  && /bin/sh -c python3 -m pip install --upgrade pip
+  
+RUN set -x && apt-get install $NWAF_PKG -y
+RUN set -x && mv /etc/nginx /etc/nginx-orig
 
-COPY /nginx-ui /nginx-ui
-RUN bash /nginx-ui/get-latest.sh
+COPY docker /
+RUN set -x \
+  && bash /nginx-ui/get-latest.sh \
+  && chmod +x /etc/init.d/*
 
+EXPOSE 80 443 9000
+
+ENTRYPOINT ["bash", "/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
