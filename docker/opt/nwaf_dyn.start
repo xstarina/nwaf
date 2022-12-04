@@ -1,0 +1,60 @@
+#!/bin/bash
+
+create_configs () {
+  nginx=/etc/nginx/nginx.conf
+  sed -i '1s|^|load_module /etc/nginx/modules/ngx_http_waf_module.so;|' $nginx
+  sed -i 's/.*worker_processes.*;/worker_processes auto;/' $nginx
+  gzpos=$(sed -n '/gzip  on;/=' $nginx)
+  sed -i "${gzpos}a\\\n    ##\n    # Nemesida WAF\n    ##\n\n    ## Fix: request body too large\n    client_body_buffer_size 25M;\n\n    include /etc/nginx/nwaf/conf/global/*.conf;\n    include /etc/nginx/nwaf/conf/vhosts/*.conf;\n" $nginx
+  cp /etc/nginx/nginx.conf /nginx.configs/
+  mkdir /nginx.configs/nwaf
+  cp -r /etc/nginx/nwaf/conf /nginx.configs/nwaf/
+  cp /etc/nginx/nwaf/mla.conf /nginx.configs/nwaf/
+  cp -r /etc/nginx/conf.d /nginx.configs/
+  mkdir /nginx.configs/other.conf
+  rm -rf /etc/rabbitmq/*
+  dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}' > /nginx.configs/version
+}
+
+if [ -f "/nginx.configs/first-launch" ]
+then
+  create_configs
+  rm -f /nginx.configs/first-launch
+else
+  if [ ! -f "/tmp/on" ]
+  then
+    ln -sf /nginx.configs/nginx.conf /etc/nginx/nginx.conf
+    rm -rf /etc/nginx/nwaf/conf
+    ln -sf /nginx.configs/nwaf/conf /etc/nginx/nwaf/
+    ln -sf /nginx.configs/nwaf/mla.conf /etc/nginx/nwaf/mla.conf
+    rm -rf /etc/nginx/conf.d
+    ln -sf /nginx.configs/conf.d /etc/nginx/
+    rm -rf /etn/nginx/other.conf
+    rm -rf /etc/rabbitmq/*
+    ln -sf /nginx.configs/other.conf /etc/nginx/other.conf
+    /usr/bin/dbus-uuidgen > /etc/machine-id
+    user=$(cat "/etc/nginx/nginx.conf" | grep "^user" | awk '{print $2}' | awk -F ';' '{print $1}')
+    group=$(cat "/etc/nginx/nginx.conf" | grep "^user" | awk '{print $NF}' | awk -F ';' '{print $1}')
+    chown -R "$user":"$group" "/etc/nginx/nwaf/conf/global/db/"
+  fi
+
+  if [[ $(cat /nginx.configs/version) != $(dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}') ]]
+  then
+    mkdir /tmp/old
+    cp -r /nginx.configs/* /tmp/old/
+    mv /tmp/old /nginx.configs/
+
+    dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}' > /nginx.configs/version
+
+    echo "Nemesida WAF updated. Previous config files moved to 'old 'subdirectory in your configs directory. Check config files for your settings!"
+  fi
+
+  epmd -daemon
+  service rabbitmq-server start
+
+  service nwaf_update start
+  service nginx start
+  echo "on" > "/tmp/on"
+
+  while true; do sleep 10; done
+fi
