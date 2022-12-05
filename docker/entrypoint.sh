@@ -50,6 +50,7 @@ fi
 epmd -daemon
 service rabbitmq-server start
 service nwaf_update start
+service cron start
 nginx-ui -config "${UI_DIR}/app.ini" &
 
 exec "$@"
