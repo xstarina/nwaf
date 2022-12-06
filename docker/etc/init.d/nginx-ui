@@ -3,7 +3,7 @@
 servicename=${servicename:-nginx-ui}
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DAEMON=${DAEMON:-/usr/local/bin/nginx-ui}
-DAEMON_ARGS=${DAEMON_ARGS:--config /etc/nginx-ui/app.ini}
+DAEMON_ARGS=${DAEMON_ARGS:-\-config /etc/nginx-ui/app.ini}
 PIDFILE=${PIDFILE:-/var/run/nginx-ui.pid}
 
 . /lib/init/vars.sh
