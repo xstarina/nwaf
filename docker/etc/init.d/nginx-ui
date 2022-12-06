@@ -11,7 +11,7 @@ PIDFILE=${PIDFILE:-/var/run/nginx-ui.pid}
 
 do_start()
 {
-    start-stop-daemon --start -v --background --name nginx-ui --make-pidfile --pidfile $PIDFILE --exec "$DAEMON $DAEMON_ARGS"
+    start-stop-daemon --start -v --background --name nginx-ui --make-pidfile --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_ARGS
     RETVAL="$?"
     return "$RETVAL"
 }
