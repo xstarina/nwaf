@@ -47,6 +47,7 @@ fi
 [[ -f /etc/machine-id ]] || /usr/bin/dbus-uuidgen > /etc/machine-id
 [[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]] && echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
 
+rm -rf /etc/rabbitmq/*
 epmd -daemon
 for SVC in rabbitmq-server nwaf_update nginx-ui cron; do service $SVC start; done
 
