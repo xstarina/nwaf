@@ -48,9 +48,6 @@ fi
 [[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]] && echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
 
 epmd -daemon
-service rabbitmq-server start
-service nwaf_update start
-service cron start
-nginx-ui -config "${UI_DIR}/app.ini" &
+for SVC in rabbitmq-server nwaf_update nginx-ui cron; do service $SVC start; done
 
 exec "$@"

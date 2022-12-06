@@ -1,6 +1,6 @@
 set -x
 
-ver="1.3"
+ver="1.4"
 img="starina/nwaf-dyn-ce-nginx-ui"
 
 docker build --network host -t ${img}:${ver} -t ${img}:latest . \
