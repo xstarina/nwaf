@@ -1,4 +1,4 @@
-FROM nginx:1.22.1
+FROM nginx:1.22
 
 ENV NWAF_PKG=nwaf-dyn-1.22
 ENV DEBIAN_FRONTEND=noninteractive
