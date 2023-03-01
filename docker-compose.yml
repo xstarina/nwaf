@@ -1,0 +1,38 @@
+version: '3.3'
+services:
+  dyn:
+    image: starina/nwaf-dyn-ce-nginx-ui:test
+    environment:
+      TZ: Europe/Moscow
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - 9000:9000
+    volumes:
+      - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/etc/nginx:/etc/nginx
+      - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/etc/nginx-ui:/etc/nginx-ui
+      - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/var/log/nginx:/var/log/nginx
+      - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/www:/www
+      - /mnt/glusterfs/certbot/var/www/letsencrypt:/var/www/letsencrypt
+      - /mnt/glusterfs/certbot/etc/letsencrypt:/etc/letsencrypt:ro
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  web:
+    image: nemesida/nwaf-web:latest
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - /mnt/glusterfs/nwaf-web/api-cab-config:/nwaf-api
+      - /mnt/glusterfs/nwaf-web/api-cab-base:/var/lib/postgresql
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
