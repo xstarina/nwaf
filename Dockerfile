@@ -1,5 +1,6 @@
 FROM nginx:1.22
 
+ENV BUILD_VER=230330-01
 ENV NWAF_PKG=nwaf-dyn-1.22
 ENV DEBIAN_FRONTEND=noninteractive
 
