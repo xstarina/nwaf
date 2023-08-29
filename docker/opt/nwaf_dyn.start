@@ -1,6 +1,7 @@
 #!/bin/bash
 
-create_configs () {
+create_configs()
+{
   nginx=/etc/nginx/nginx.conf
   sed -i '1s|^|load_module /etc/nginx/modules/ngx_http_waf_module.so;|' $nginx
   sed -i 's/.*worker_processes.*;/worker_processes auto;/' $nginx
@@ -13,7 +14,7 @@ create_configs () {
   cp -r /etc/nginx/conf.d /nginx.configs/
   mkdir /nginx.configs/other.conf
   rm -rf /etc/rabbitmq/*
-  dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}' > /nginx.configs/version
+  dpkg -l | grep 'nwaf-dyn-1.2' | awk '{print ($3)}' > /nginx.configs/version
 }
 
 if [ -f "/nginx.configs/first-launch" ]
@@ -38,14 +39,12 @@ else
     chown -R "$user":"$group" "/etc/nginx/nwaf/conf/global/db/"
   fi
 
-  if [[ $(cat /nginx.configs/version) != $(dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}') ]]
+  if [[ $(cat /nginx.configs/version) != $(dpkg -l | grep 'nwaf-dyn-1.2' | awk '{print ($3)}') ]]
   then
     mkdir /tmp/old
     cp -r /nginx.configs/* /tmp/old/
     mv /tmp/old /nginx.configs/
-
-    dpkg -l | grep nwaf-dyn-1.20 | awk '{print ($3)}' > /nginx.configs/version
-
+    dpkg -l | grep 'nwaf-dyn-1.2' | awk '{print ($3)}' > /nginx.configs/version
     echo "Nemesida WAF updated. Previous config files moved to 'old 'subdirectory in your configs directory. Check config files for your settings!"
   fi
 
@@ -57,4 +56,5 @@ else
   echo "on" > "/tmp/on"
 
   while true; do sleep 10; done
+
 fi

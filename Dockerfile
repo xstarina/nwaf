@@ -1,7 +1,7 @@
-FROM nginx:1.22
+FROM nginx:1.24
 
-ENV BUILD_VER=230330-01
-ENV NWAF_PKG=nwaf-dyn-1.22
+ENV BUILD_VER=230829-01
+ENV NWAF_PKG=nwaf-dyn-1.24
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN set -x \
@@ -15,7 +15,7 @@ RUN set -x \
   && apt-get update \
   && apt-get install $(apt-cache depends $NWAF_PKG | awk '/Depends:/{print$2}') -y \
   && /bin/sh -c python3 -m pip install --upgrade pip
-  
+
 RUN set -x && apt-get install $NWAF_PKG -y
 RUN set -x && mv /etc/nginx /etc/nginx-orig
 
