@@ -12,5 +12,7 @@ YMD="$(date '+%y.%-m.%-d')"
 } || V="$YMD.1"
 
 [[ $V =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && {
-    docker image build --network host --add-host=github.com:140.82.121.3 --add-host=api.github.com:140.82.121.5 -t $IMG:$V -t $IMG:$TAG . && [[ -z $1 ]] && echo "$V">"$VF" && docker push $IMG:$V && docker push $IMG:$TAG
+    docker image build --network host --add-host=github.com:140.82.121.3 --add-host=api.github.com:140.82.121.5 -t $IMG:$V -t $IMG:$TAG . \
+    && [[ -z $1 ]] && echo "$V">"$VF" \
+    && docker push $IMG:$V && docker push $IMG:$TAG
 }
