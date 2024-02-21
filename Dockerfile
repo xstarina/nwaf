@@ -23,6 +23,7 @@ RUN set -ex; \
     mkdir -p /run/systemd/system; \
     curl -L -s https://raw.githubusercontent.com/0xJacky/nginx-ui/master/install.sh -o /tmp/install.sh; \
     bash /tmp/install.sh install; \
+    rm -rf /run/systemd/system; \
     rm -f /tmp/install.sh
 
 COPY ./docker/ /
