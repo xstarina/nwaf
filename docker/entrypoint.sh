@@ -32,8 +32,6 @@ resolver 127.0.0.11 valid=30s;
 nwaf_limit rate=5r/m block_time=600;
 # nwaf_limit rate=5r/m block_time=0 domain=example.com;
 EOF
-
-  dpkg -l | grep nwaf-dyn | awk '{print$3}' > $NWAF_VER_FILE
 }
 
 mkdir -p /etc/nginx
@@ -65,9 +63,13 @@ EOF
   echo "Nginx UI config file is done"
 fi
 
-[[ -f /etc/machine-id ]] || /usr/bin/dbus-uuidgen > /etc/machine-id
-[[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]] && echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
+[[ ! -f $NWAF_VER_FILE ]] && echo $NWAF_VER > $NWAF_VER_FILE
+[[ ! -f /etc/machine-id ]] && /usr/bin/dbus-uuidgen > /etc/machine-id
 
+if [[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]]; then
+  echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
+  echo $NWAF_VER > $NWAF_VER_FILE
+fi
 rm -rf /etc/rabbitmq/*
 
 exec "$@"
