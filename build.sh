@@ -1,10 +1,18 @@
-set -x
-set -e
+#!/bin/bash
 
-ver="1.7.8.1"
-img="starina/nwaf-dyn-ce-nginx-ui"
-[ "$1" == 'test' ] && tag='test' || tag='latest'
+IMG='starina/nwaf-dyn-ce-nginx-ui'
+TAG='latest'
 
-docker pull nginx:1.22
-docker build --network host -t ${img}:${ver} -t ${img}:${tag} .
-[ "$tag" == 'latest' ] && for t in $ver $tag; do docker push $img:$t; done
+VF="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/VERSION"
+YMD="$(date '+%y.%-m.%-d')"
+
+[[ -f "$VF" ]] && {
+    V="$(head -n 1 "$VF")"
+    [[ $V =~ ^$YMD\.[0-9]+$ ]] && V="$(echo $V | awk -F. -v OFS=. '{$NF++; print}')" || V="$YMD.1"
+} || V="$YMD.1"
+
+[[ $V =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && {
+    docker image build --network host --add-host=github.com:140.82.121.3 --add-host=api.github.com:140.82.121.5 -t $IMG:$V -t $IMG:$TAG . \
+    && [[ -z $1 ]] && echo "$V">"$VF" \
+    && docker push $IMG:$V && docker push $IMG:$TAG
+}

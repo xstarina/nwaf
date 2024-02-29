@@ -16,7 +16,7 @@ create_configs() {
   sed -i 's/.*worker_processes.*;/worker_processes auto;/' $NGINX_CONF
   gzpos=$(sed -n '/gzip\s\s*on;/=' $NGINX_CONF)
   sed -i "${gzpos}a\\\n    ##\n    # Nemesida WAF\n    ##\n\n    ## Fix: request body too large\n    client_body_buffer_size 25M;\n\n    ## Custom Nwaf settings\n    include $NWAF_CONF;\n    include /etc/nginx/nwaf/conf/global/*.conf;\n    include /etc/nginx/nwaf/conf/vhosts/*.conf;" $NGINX_CONF
-  sed -i '/^http {/,/^}/!b;/^}/i\    include /etc/nginx/sites-enabled/*;' $NGINX_CONF
+  sed -i '/^http {/,/^}/!b;/^}/i\    include /etc/nginx/sites-enabled/*;\n    include /etc/nginx/streams-enabled/*;' $NGINX_CONF
 
   cat > $NWAF_CONF << EOF
 # this is the internal Docker DNS, cache only for 30s
@@ -32,8 +32,6 @@ resolver 127.0.0.11 valid=30s;
 nwaf_limit rate=5r/m block_time=600;
 # nwaf_limit rate=5r/m block_time=0 domain=example.com;
 EOF
-
-  dpkg -l | grep nwaf-dyn | awk '{print$3}' > $NWAF_VER_FILE
 }
 
 mkdir -p /etc/nginx
@@ -41,7 +39,7 @@ if [[ "$(ls -A /etc/nginx)" = "" ]]; then
   echo "Initialing Nginx config dir..."
 
   cp -rp /etc/nginx-orig/* /etc/nginx/
-  mkdir -p /etc/nginx/sites-{enabled,available}
+  mkdir -p /etc/nginx/{sites,streams}-{enabled,available}
   create_configs
 
   echo "Nginx config dir is done"
@@ -57,19 +55,22 @@ RunMode = release
 HttpPort = 9000
 HTTPChallengePort = 9180
 
-[nginx_log]
+[nginx]
 AccessLogPath = /var/log/nginx/access.log
 ErrorLogPath = /var/log/nginx/error.log
+RestartCmd = /usr/bin/supervisorctl restart nginx
 EOF
 
   echo "Nginx UI config file is done"
 fi
 
-[[ -f /etc/machine-id ]] || /usr/bin/dbus-uuidgen > /etc/machine-id
-[[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]] && echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
+[[ ! -f $NWAF_VER_FILE ]] && echo $NWAF_VER > $NWAF_VER_FILE
+[[ ! -f /etc/machine-id ]] && /usr/bin/dbus-uuidgen > /etc/machine-id
 
+if [[ $(cat $NWAF_VER_FILE) != $NWAF_VER ]]; then
+  echo "New version ${NWAF_VER}! Need to upgdate configs dir!"
+  echo $NWAF_VER > $NWAF_VER_FILE
+fi
 rm -rf /etc/rabbitmq/*
-epmd -daemon
-for SVC in rabbitmq-server nwaf_update nginx-ui cron; do service $SVC start; done
 
 exec "$@"

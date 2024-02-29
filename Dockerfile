@@ -1,31 +1,34 @@
-FROM nginx:1.22
+FROM nginx:1.24
 
-ENV BUILD_VER=230330-01
-ENV NWAF_PKG=nwaf-dyn-1.22
-ENV DEBIAN_FRONTEND=noninteractive
+RUN set -ex; \
+    apt-get update && apt-get upgrade -y; \
+    apt-get install supervisor apt-utils apt-transport-https gnupg2 curl procps dbus -y; \
+    rm -rf /var/lib/apt/lists/*
 
-RUN set -x \
-  && apt-get update && apt-get upgrade -y \
-  && apt-get install apt-utils apt-transport-https gnupg2 curl procps dbus -y
+ARG DEBIAN_FRONTEND=noninteractive
+ENV BUILD_VER=240221-01
+ENV NWAF_PKG=nwaf-dyn-1.24
 
-RUN set -x \
-  && echo "deb https://nemesida-security.com/repo/nw/debian bullseye non-free" > /etc/apt/sources.list.d/NemesidaWAF.list \
-  && curl -s https://nemesida-security.com/repo/nw/gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/trusted.gpg --import \
-  && chmod 644 /etc/apt/trusted.gpg.d/trusted.gpg \
-  && apt-get update \
-  && apt-get install $(apt-cache depends $NWAF_PKG | awk '/Depends:/{print$2}') -y \
-  && /bin/sh -c python3 -m pip install --upgrade pip
-  
-RUN set -x && apt-get install $NWAF_PKG -y
-RUN set -x && mv /etc/nginx /etc/nginx-orig
+RUN set -ex; \
+    echo "deb https://nemesida-security.com/repo/nw/debian bullseye non-free" > /etc/apt/sources.list.d/NemesidaWAF.list; \
+    curl -s https://nemesida-security.com/repo/nw/gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/trusted.gpg --import; \
+    chmod 644 /etc/apt/trusted.gpg.d/trusted.gpg; \
+    apt-get update; \
+    apt-get install $(apt-cache depends $NWAF_PKG | awk '/Depends:/{print$2}') $NWAF_PKG -y; \
+    python3 -m pip install --upgrade pip; \
+    mv /etc/nginx /etc/nginx-orig; \
+    rm -rf /var/lib/apt/lists/*
 
-COPY docker/nginx-ui/get-latest.sh /nginx-ui/
-RUN set -x && bash /nginx-ui/get-latest.sh
+RUN set -ex; \
+    mkdir -p /run/systemd/system; \
+    curl -L -s https://raw.githubusercontent.com/0xJacky/nginx-ui/master/install.sh -o /tmp/install.sh; \
+    bash /tmp/install.sh install; \
+    rm -rf /run/systemd/system; \
+    rm -f /tmp/install.sh
 
-COPY docker /
-RUN set -x && chmod +x /etc/init.d/*
+COPY ./docker/ /
 
 EXPOSE 80 443 9000
 
 ENTRYPOINT ["bash", "/entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
