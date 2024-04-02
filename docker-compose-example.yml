@@ -1,7 +1,8 @@
-version: '3.3'
+version: '3.9'
 services:
   dyn:
-    image: starina/nwaf-dyn-ce-nginx-ui:test
+    image: starina/nwaf-dyn-ce-nginx-ui:latest
+    restart: always
     environment:
       TZ: Europe/Moscow
     ports:
@@ -19,20 +20,16 @@ services:
       - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/etc/nginx-ui:/etc/nginx-ui
       - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/var/log/nginx:/var/log/nginx
       - /mnt/glusterfs/nwaf-dyn-ce-nginx-ui/www:/www
-      - /mnt/glusterfs/certbot/var/www/letsencrypt:/var/www/letsencrypt
-      - /mnt/glusterfs/certbot/etc/letsencrypt:/etc/letsencrypt:ro
-      # - /etc/timezone:/etc/timezone:ro
-      # - /etc/localtime:/etc/localtime:ro
+    init: true
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
-  web:
-    image: nemesida/nwaf-web:latest
-    environment:
-      TZ: Europe/Moscow
-    volumes:
-      - /mnt/glusterfs/nwaf-web/api-cab-config:/nwaf-api
-      - /mnt/glusterfs/nwaf-web/api-cab-base:/var/lib/postgresql
-      # - /etc/timezone:/etc/timezone:ro
-      # - /etc/localtime:/etc/localtime:ro
+
+  # web:
+  #   image: nemesida/nwaf-web:latest
+  #   environment:
+  #     TZ: Europe/Moscow
+  #   volumes:
+  #     - /mnt/glusterfs/nwaf-web/api-cab-config:/nwaf-api
+  #     - /mnt/glusterfs/nwaf-web/api-cab-base:/var/lib/postgresql
