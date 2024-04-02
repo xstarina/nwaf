@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKERHUB_SLUG: starina/nwaf
+  DOCKERHUB_SLUG: starina/nwaf-dyn-ce-nginx-ui
   GHCR_SLUG: ghcr.io/${{ github.repository }}
 
 jobs:
