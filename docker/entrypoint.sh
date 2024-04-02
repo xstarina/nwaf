@@ -86,4 +86,9 @@ if [[ $(cat ${NWAF_VER_FILE}) != ${NWAF_VER} ]]; then
 fi
 rm -rf /etc/rabbitmq/*
 
+for L in access error; do
+  LOG=/var/log/nginx/${L}.log
+  [[ -L $LOG ]] && rm -f $LOG
+done
+
 exec "$@"
