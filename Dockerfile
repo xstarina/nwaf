@@ -1,4 +1,4 @@
-FROM nginx:1.24
+FROM nginx:1.24-bullseye
 
 RUN set -ex; \
     apt-get update && apt-get upgrade -y; \
@@ -6,7 +6,7 @@ RUN set -ex; \
     rm -rf /var/lib/apt/lists/*
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV BUILD_VER=240221-01
+ENV BUILD_VER=240402-01
 ENV NWAF_PKG=nwaf-dyn-1.24
 
 RUN set -ex; \
@@ -29,6 +29,14 @@ RUN set -ex; \
 COPY ./docker/ /
 
 EXPOSE 80 443 9000
+
+LABEL   maintainer=starina \
+        description="Nginx + Nwaf + Nginx UI as a Docker container" \
+        org.opencontainers.image.vendor=starina \
+        org.opencontainers.image.source=https://github.com/xstarina/nwaf \
+        org.opencontainers.image.title=nwaf \
+        org.opencontainers.image.description="Nginx + Nginx UI as a Docker container" \
+        org.opencontainers.image.licenses=MIT
 
 ENTRYPOINT ["bash", "/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]

@@ -13,7 +13,6 @@ create_configs() {
   local NWAF_CONF=${NGINX_DIR}/nwaf-custom.conf
 
   sed -i "1s|^|load_module ${NGINX_DIR}/modules/ngx_http_waf_module.so;|" ${NGINX_CONF}
-  # sed -i -E "s/^(\s*error_log)\s+.*;\s*$/\1\t\/dev\/stderr\tnotice;/; s/^(\s*access_log)\s+.*;\s*$/\1\t\/dev\/stdout\tmain;/" ${NGINX_CONF}
   sed -i "s/.*worker_processes.*;/worker_processes auto;/" ${NGINX_CONF}
   gzpos=$(sed -n '/gzip\s\s*on;/=' ${NGINX_CONF})
   sed -i "${gzpos}a\\\n    ##\n    # Nemesida WAF\n    ##\n\n    ## Fix: request body too large\n    client_body_buffer_size 25M;\n\n    ## Custom Nwaf settings\n    include ${NWAF_CONF};\n    include ${NGINX_DIR}/nwaf/conf/global/*.conf;\n    include ${NGINX_DIR}/nwaf/conf/vhosts/*.conf;" ${NGINX_CONF}
