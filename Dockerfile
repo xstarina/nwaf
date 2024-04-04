@@ -41,4 +41,4 @@ LABEL   maintainer=starina \
 ENTRYPOINT ["bash", "/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
 
-# edit 240404-01
+# edit 240404-02
