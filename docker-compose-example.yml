@@ -25,7 +25,7 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-
+#####
   # web:
   #   image: nemesida/nwaf-web:latest
   #   environment:
